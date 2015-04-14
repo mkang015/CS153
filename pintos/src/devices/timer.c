@@ -277,7 +277,7 @@ wakeUpTimeComparator(const struct list_elem* a,
 					 const struct list_elem* b, 
 					 void* aux UNUSED)
 {
-  return list_entry(a, struct thread, waitelem)->wakeUpTime >
+  return list_entry(a, struct thread, waitelem)->wakeUpTime <
   		 list_entry(b, struct thread, waitelem)->wakeUpTime;
 }
 
