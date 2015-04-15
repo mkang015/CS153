@@ -1,0 +1,263 @@
+
+			+--------------------+
+			|	CS 153	     |
+			| PROJECT 1: THREADS |
+			|   DESIGN DOCUMENT  |
+			+--------------------+
+				   
+---- GROUP ----
+
+>> Fill in the names and email addresses of your group members.
+
+Raymond Ho	 <rho002@ucr.edu> <861061153>
+Min Kang	 <mkang015@ucr.edu> <SID>
+
+---- PRELIMINARIES ----
+
+>> If you have any preliminary comments on your submission, notes for the
+>> TAs, or extra credit, please give them here.
+
+>> Please cite any offline or online sources you consulted while
+>> preparing your submission, other than the Pintos documentation, course
+>> text, lecture notes, and course staff.
+
+			     ALARM CLOCK
+			     ===========
+
+---- DATA STRUCTURES ----
+
+>> A1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+//Stores all threads that are sleeping by timer_sleep() in order of 
+// wake up time
+static struct list wait_list;
+
+---- ALGORITHMS ----
+
+>> A2: Briefly describe what happens in a call to timer_sleep(),
+>> including the effects of the timer interrupt handler.
+
+// In timer_sleep(), grabs current thread to put to sleep and set the wake up
+// time. Then insert in order its wake up time into wait_list. Then we block
+// the current thread, and then waits for timer_interrupt to wake it up at right
+// time. Timer_interrupt increases the timer tick as it checks if threads in 
+// wait_list are ready to be woken up. If so, unblocks them.
+
+>> A3: What steps are taken to minimize the amount of time spent in
+>> the timer interrupt handler?
+
+// The reason why we are changing te original thread sleep is because it "busy
+// waits", which takes a lot of cpu usage. We now changed it so it only checks the threads 
+//that are ready to be woken up then we break out of the for loop without checking
+// the rest of them that aren't ready.
+
+---- SYNCHRONIZATION ----
+
+>> A4: How are race conditions avoided when multiple threads call
+>> timer_sleep() simultaneously?
+
+// By blocking the current thread, and letting other threads in the
+// ready_list run, which might also call timer_sleep(), we avoid the
+// race conditions when multiple threads call timer_sleep() simultaneously.
+
+>> A5: How are race conditions avoided when a timer interrupt occurs
+>> during a call to timer_sleep()?
+
+// Race conditions in timer interrupt are avoided by iterating through
+// sleeping threads in wait_list and unblocking the threads that are ready 
+// to be woken up. 
+
+---- RATIONALE ----
+
+>> A6: Why did you choose this design?  In what ways is it superior to
+>> another design you considered?
+
+// The threads are pushed to wait_list in order by their wake up time in 
+// timer_sleep() so that in timer_interrupt(), we only have to iterate
+// the threads that are ready to wake up. During the iteration, if we 
+// visit a thread that is not ready to be woken up, then we immediately 
+// break out of the for loop. Because we minimize the total number of 
+// threads that we visit, this design is superior to another design 
+// that we initially considered which iterates through entire list.
+
+			 PRIORITY SCHEDULING
+			 ===================
+
+---- DATA STRUCTURES ----
+
+>> B1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+//It's a list of threads that contains threads that are trying to donate
+// to this thread struct.
+struct list donateList;
+
+//list element for donateList
+struct list_elem waitelem;
+
+//pointer to a lock to keep track of which threads to let go during
+//lock release
+struct lock* theLock;
+
+>> B2: Explain the data structure used to track priority donation.
+>> Use ASCII art to diagram a nested donation.  (Alternately, submit a
+>> .png file.)
+
+//Data structure we used to keep track of the priority donation is 
+// struct list donateList. Each thread object/struct contains a list
+// of threads that are trying to donate to it. 
+
+ASCII art:
+         waiting thread
+        ---------------
+              H(63)
+ ________________________________________
+|                                        |
+|        waiting thread                  |
+|        --------------                  |
+|             Y(40)                      |
+|             X(23)                      |
+|	A.lock_acquire();                |
+|	 __________________              |
+|	|                  |             |
+|	|                  |             |
+|	|                  |             |
+|	|       ____       |             |
+|	|      |  L |      |             |
+|	|      |(20)|      |   donateList|
+|	|      |____|      |   --------- |
+|	|                  |    X(23)    |
+|	|                  |    Y(40)    |
+|	|                  |             |
+|	|__________________|             |
+|	A.lock_release();                |
+|                                        |
+|________________________________________|
+---- ALGORITHMS ----
+
+>> B3: How do you ensure that the highest priority thread waiting for
+>> a lock, semaphore, or condition variable wakes up first?
+
+// We keep track with our donateList. If a thread has a higher priority and
+// another thread with a lower priority is in a lock then we place the higher
+// priority in a the donatelist under the lower priority. Then, we get the max
+// of donateList to be the donor. Then once the lower priority is out of the 
+// lock the that donor goes in to the lock.
+
+>> B4: Describe the sequence of events when a call to lock_acquire()
+>> causes a priority donation.  How is nested donation handled?
+
+// Lock_acquire() checks the nested donateList for the highest-priority thread
+// to be next. The nested donation is handled by checking the donatelist of
+// threads for the max and checking if that max thread has donors. Then we find
+// the max of that and continue until there aren't any donors.
+
+>> B5: Describe the sequence of events when lock_release() is called
+>> on a lock that a higher-priority thread is waiting for.
+
+// When lock_release() is called on a lock a higher-priority thread is waiting
+// for, we look into our nested donateList to check for the highest-priority
+// thread. Once we find it, it goes into the lock then we clear the donateList
+// for that lock.
+
+---- SYNCHRONIZATION ----
+
+>> B6: Describe a potential race in thread_set_priority() and explain
+>> how your implementation avoids it.  Can you use a lock to avoid
+>> this race?
+
+// If two threads are calling thread_set_priority() for another thread, there
+// could be potential race where one sets first and finishes first before the other.
+// Our implementation includes thread_yield(), it calls the next highest
+// priority thread. We could create a lock to avoid this race, but then we'll
+// only be able to set one priority at a time, which is really slow.
+
+---- RATIONALE ----
+
+>> B7: Why did you choose this design?  In what ways is it superior to
+>> another design you considered?
+
+// The reason why we chose this design is because it is easiest efficient way.
+// First we could have implemented with a lock, but that would make it too slow
+// since we would only be able to set one priority at a time. 
+// We don't want to be swapping the priorities directly because it will 
+// make management a lot worse. 
+
+			  ADVANCED SCHEDULER
+			    (If Attempted)
+			  ==================
+
+---- DATA STRUCTURES ----
+
+>> C1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+---- ALGORITHMS ----
+
+>> C2: Suppose threads A, B, and C have nice values 0, 1, and 2.  Each
+>> has a recent_cpu value of 0.  Fill in the table below showing the
+>> scheduling decision and the priority and recent_cpu values for each
+>> thread after each given number of timer ticks.
+
+timer  recent_cpu    priority   thread
+ticks   A   B   C   A   B   C   to run
+-----  --  --  --  --  --  --   ------
+ 0
+ 4
+ 8
+12
+16
+20
+24
+28
+32
+36
+
+>> C3: Did any ambiguities in the scheduler specification make values
+>> in the table uncertain?  If so, what rule did you use to resolve
+>> them?  Does this match the behavior of your scheduler?
+
+>> C4: How is the way you divided the cost of scheduling between code
+>> inside and outside interrupt context likely to affect performance?
+
+---- RATIONALE ----
+
+>> C5: Briefly critique your design, pointing out advantages and
+>> disadvantages in your design choices.  If you were to have extra
+>> time to work on this part of the project, how might you choose to
+>> refine or improve your design?
+
+>> C6: The assignment explains arithmetic for fixed-point math in
+>> detail, but it leaves it open to you to implement it.  Why did you
+>> decide to implement it the way you did?  If you created an
+>> abstraction layer for fixed-point math, that is, an abstract data
+>> type and/or a set of functions or macros to manipulate fixed-point
+>> numbers, why did you do so?  If not, why not?
+
+			   SURVEY QUESTIONS
+			   ================
+
+Answering these questions is optional, but it will help us improve the
+course in future quarters.  Feel free to tell us anything you
+want--these questions are just to spur your thoughts.  You may also
+choose to respond anonymously in the course evaluations at the end of
+the quarter.
+
+>> In your opinion, was this assignment, or any one of the three problems
+>> in it, too easy or too hard?  Did it take too long or too little time?
+
+>> Did you find that working on a particular part of the assignment gave
+>> you greater insight into some aspect of OS design?
+
+>> Is there some particular fact or hint we should give students in
+>> future quarters to help them solve the problems?  Conversely, did you
+>> find any of our guidance to be misleading?
+
+>> Do you have any suggestions for the TAs to more effectively assist
+>> students, either for future quarters or the remaining projects?
+
+>> Any other comments?
