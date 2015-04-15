@@ -291,13 +291,17 @@ wakeUpThread()
 
     ASSERT(intr_get_level() == INTR_OFF);
 
-    e = list_begin(&wait_list); //get head (only check the head)
-    struct thread* t = list_entry(e, struct thread, waitelem); //get thread
-
-    if(currentTicks >= t->wakeUpTime) //if it's time to wake up (>= covers 0 and neg case)
+    //iterate through list until you reach a thread that is not ready wake up
+    for(e = list_begin(&wait_list); e != list_end(&wait_list); e = list_next(e))
 	{
-	  list_remove(&t->waitelem); //remove it from waitlist
-	  thread_unblock(t); //unblock
+      struct thread* t = list_entry(e, struct thread, waitelem); //get thread
+      if(currentTicks >= t->wakeUpTime) //if it's time to wake up (>= covers 0 and neg case)
+	  {
+	    list_remove(&t->waitelem); //remove it from waitlist
+	    thread_unblock(t); //unblock
+	  }
+	  else //if you reach thread that is not ready to wake up, you can just stop
+	    break;
 	}
   }
 }

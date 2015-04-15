@@ -1,6 +1,6 @@
-qemu -hda /tmp/kPv3BzcvEG.dsk -m 4 -net none -nographic -monitor null
+qemu -hda /tmp/goE1799I2U.dsk -m 4 -net none -nographic -monitor null
 PiLo hda1
-Loading........
+Loading.........
 Kernel command line: -q run alarm-zero
 Pintos booting with 4,096 kB RAM...
 383 pages available in kernel pool.
@@ -12,8 +12,8 @@ Executing 'alarm-zero':
 (alarm-zero) PASS
 (alarm-zero) end
 Execution of 'alarm-zero' complete.
-Timer: 20 ticks
-Thread: 0 idle ticks, 20 kernel ticks, 0 user ticks
+Timer: 21 ticks
+Thread: 1 idle ticks, 20 kernel ticks, 0 user ticks
 Console: 385 characters output
 Keyboard: 0 keys pressed
 Powering off...

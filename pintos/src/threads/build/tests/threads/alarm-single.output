@@ -1,6 +1,6 @@
-qemu -hda /tmp/Q4Wmz66ZJw.dsk -m 4 -net none -nographic -monitor null
+qemu -hda /tmp/V_lGT3pWNa.dsk -m 4 -net none -nographic -monitor null
 PiLo hda1
-Loading........
+Loading.........
 Kernel command line: -q run alarm-single
 Pintos booting with 4,096 kB RAM...
 383 pages available in kernel pool.
@@ -22,7 +22,7 @@ Executing 'alarm-single':
 (alarm-single) end
 Execution of 'alarm-single' complete.
 Timer: 271 ticks
-Thread: 0 idle ticks, 271 kernel ticks, 0 user ticks
-Console: 986 characters output
+Thread: 250 idle ticks, 21 kernel ticks, 0 user ticks
+Console: 987 characters output
 Keyboard: 0 keys pressed
 Powering off...
