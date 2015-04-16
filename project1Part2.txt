@@ -3,9 +3,8 @@ check ready list for highest priority, run that thread
 -Thread is (re) added to ready list
 -Thread priority is set (changed)
 -Thread yields or blocks
--Thread priority is donated
+-Thread priority is donated or undonated
 ---------------------------------------
-
 use list_max and comparator function
 
 

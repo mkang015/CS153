@@ -1,6 +1,6 @@
 
 			+--------------------+
-			|	CS 153	     |
+			|	CS 153	         |
 			| PROJECT 1: THREADS |
 			|   DESIGN DOCUMENT  |
 			+--------------------+
@@ -10,7 +10,7 @@
 >> Fill in the names and email addresses of your group members.
 
 Raymond Ho	 <rho002@ucr.edu> <861061153>
-Min Kang	 <mkang015@ucr.edu> <SID>
+Min Kang	 <mkang015@ucr.edu> <861047191>
 
 ---- PRELIMINARIES ----
 
@@ -39,7 +39,7 @@ static struct list wait_list;
 >> A2: Briefly describe what happens in a call to timer_sleep(),
 >> including the effects of the timer interrupt handler.
 
-// In timer_sleep(), grabs current thread to put to sleep and set the wake up
+//In timer_sleep(), grabs current thread to put to sleep and set the wake up
 // time. Then insert in order its wake up time into wait_list. Then we block
 // the current thread, and then waits for timer_interrupt to wake it up at right
 // time. Timer_interrupt increases the timer tick as it checks if threads in 
@@ -48,9 +48,9 @@ static struct list wait_list;
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
 
-// The reason why we are changing te original thread sleep is because it "busy
+//The reason why we are changing te original thread sleep is because it "busy
 // waits", which takes a lot of cpu usage. We now changed it so it only checks the threads 
-//that are ready to be woken up then we break out of the for loop without checking
+// that are ready to be woken up then we break out of the for loop without checking
 // the rest of them that aren't ready.
 
 ---- SYNCHRONIZATION ----
@@ -58,7 +58,7 @@ static struct list wait_list;
 >> A4: How are race conditions avoided when multiple threads call
 >> timer_sleep() simultaneously?
 
-// By blocking the current thread, and letting other threads in the
+//By blocking the current thread, and letting other threads in the
 // ready_list run, which might also call timer_sleep(), we avoid the
 // race conditions when multiple threads call timer_sleep() simultaneously.
 
@@ -74,7 +74,7 @@ static struct list wait_list;
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
-// The threads are pushed to wait_list in order by their wake up time in 
+//The threads are pushed to wait_list in order by their wake up time in 
 // timer_sleep() so that in timer_interrupt(), we only have to iterate
 // the threads that are ready to wake up. During the iteration, if we 
 // visit a thread that is not ready to be woken up, then we immediately 
@@ -98,6 +98,9 @@ struct list donateList;
 //list element for donateList
 struct list_elem waitelem;
 
+//priority of thread after donation
+int newPriority;                   
+
 //pointer to a lock to keep track of which threads to let go during
 //lock release
 struct lock* theLock;
@@ -120,28 +123,29 @@ ASCII art:
 |        --------------                  |
 |             Y(40)                      |
 |             X(23)                      |
-|	A.lock_acquire();                |
-|	 __________________              |
-|	|                  |             |
-|	|                  |             |
-|	|                  |             |
-|	|       ____       |             |
-|	|      |  L |      |             |
-|	|      |(20)|      |   donateList|
-|	|      |____|      |   --------- |
-|	|                  |    X(23)    |
-|	|                  |    Y(40)    |
-|	|                  |             |
-|	|__________________|             |
-|	A.lock_release();                |
+|	    A.lock_acquire();                |
+|	     __________________              |
+|	    |                  |             |
+|	    |                  |             |
+|	    |                  |             |
+|	    |       ____       |             |
+|	    |      |  L |      |             |
+|	    |      |(20)|      |   donateList|
+|	    |      |____|      |   --------- |
+|	    |                  |    X(23)    |
+|	    |                  |    Y(40)    |
+|	    |                  |             |
+|	    |__________________|             |
+|	    A.lock_release();                |
 |                                        |
 |________________________________________|
+
 ---- ALGORITHMS ----
 
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
 
-// We keep track with our donateList. If a thread has a higher priority and
+//We keep track of it with our donateList. If a thread has a higher priority and
 // another thread with a lower priority is in a lock then we place the higher
 // priority in a the donatelist under the lower priority. Then, we get the max
 // of donateList to be the donor. Then once the lower priority is out of the 
@@ -150,18 +154,19 @@ ASCII art:
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
 
-// Lock_acquire() checks the nested donateList for the highest-priority thread
+//Lock_acquire() checks the nested donateList for the highest-priority thread
 // to be next. The nested donation is handled by checking the donatelist of
 // threads for the max and checking if that max thread has donors. Then we find
-// the max of that and continue until there aren't any donors.
+// the max of that and continue.
 
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
 
-// When lock_release() is called on a lock a higher-priority thread is waiting
-// for, we look into our nested donateList to check for the highest-priority
+//When lock_release() is called on a lock a higher-priority thread is waiting
+// for, we first restore thread's original priority, then look into our nested 
+// donateList to check for the highest-priority
 // thread. Once we find it, it goes into the lock then we clear the donateList
-// for that lock.
+// for that lock, excluding those with other dependencies.
 
 ---- SYNCHRONIZATION ----
 
@@ -169,7 +174,7 @@ ASCII art:
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
 
-// If two threads are calling thread_set_priority() for another thread, there
+//If two threads are calling thread_set_priority() for another thread, there
 // could be potential race where one sets first and finishes first before the other.
 // Our implementation includes thread_yield(), it calls the next highest
 // priority thread. We could create a lock to avoid this race, but then we'll
@@ -180,7 +185,7 @@ ASCII art:
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
-// The reason why we chose this design is because it is easiest efficient way.
+//The reason why we chose this design is because it is easiest efficient way.
 // First we could have implemented with a lock, but that would make it too slow
 // since we would only be able to set one priority at a time. 
 // We don't want to be swapping the priorities directly because it will 

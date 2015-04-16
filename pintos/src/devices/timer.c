@@ -281,6 +281,7 @@ wakeUpTimeComparator(const struct list_elem* a,
   		 list_entry(b, struct thread, waitelem)->wakeUpTime;
 }
 
+//wake up thread if it's ready to be waken
 static void
 wakeUpThread()
 {
@@ -305,3 +306,4 @@ wakeUpThread()
 	}
   }
 }
+

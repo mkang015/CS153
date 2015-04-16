@@ -1,0 +1,9 @@
+qemu -hda /tmp/bmDgEfxt7O.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading.........
+Kernel command line: -q run alarm-priority
+Pintos booting with 4,096 kB RAM...
+383 pages available in kernel pool.
+383 pages available in user pool.
+
+TIMEOUT after 61 seconds of wall-clock time - load average: 0.06, 0.09, 0.15

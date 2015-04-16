@@ -89,7 +89,16 @@ struct thread
     uint8_t *stack;                     /* Saved stack pointer. */
 	int64_t wakeUpTime;					//min add, wake up time for this thread to wake up
     int priority;                       /* Priority. */
+	int newPriority;                    //min add, priority after donation
     struct list_elem allelem;           /* List element for all threads list. */
+	struct list donateList;				//min add, create list of threads that are trying to 
+										// donate to this thread
+	struct list_elem donateelem;		//min add, list element for donatelist
+	struct lock* theLock;				//min add, pointer to the lock 
+
+    //min add, recursive priority getter (recursively go through all sub donateList)
+	int (*thread_get_priorityRecursive)(struct thread*);
+    
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
