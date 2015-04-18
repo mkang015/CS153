@@ -93,9 +93,11 @@ static struct list wait_list;
 
 //It's a list of threads that contains threads that are trying to donate
 // to this thread struct.
+// It is a member of struct thread.
 struct list donateList;
 
 //list element for donateList
+// member of strut thread
 struct list_elem waitelem;
 
 //priority of thread after donation
@@ -145,7 +147,7 @@ ASCII art:
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
 
-//We keep track of it with our donateList. If a thread has a higher priority and
+//We keep track of priority with our donateList. If a thread has a higher priority and
 // another thread with a lower priority is in a lock then we place the higher
 // priority in a the donatelist under the lower priority. Then, we get the max
 // of donateList to be the donor. Then once the lower priority is out of the 
@@ -156,8 +158,7 @@ ASCII art:
 
 //Lock_acquire() checks the nested donateList for the highest-priority thread
 // to be next. The nested donation is handled by checking the donatelist of
-// threads for the max and checking if that max thread has donors. Then we find
-// the max of that and continue.
+// threads for the max and checking if that max thread has donors recursively. 
 
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
@@ -185,11 +186,12 @@ ASCII art:
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
 
-//The reason why we chose this design is because it is easiest efficient way.
-// First we could have implemented with a lock, but that would make it too slow
-// since we would only be able to set one priority at a time. 
-// We don't want to be swapping the priorities directly because it will 
-// make management a lot worse. 
+//The reason why we chose this design is to avoid race condition between 
+// multiple threads. That is why are using lock and priority donation
+// idea. This design is superior to the other design we considered
+// which is sorting the ready list by priority, because it's inefficient.
+// Another method is to acutally swap the value of priority, but that is bad 
+// idea as well because priority donation could be nested.
 
 			  ADVANCED SCHEDULER
 			    (If Attempted)
@@ -266,3 +268,8 @@ the quarter.
 >> students, either for future quarters or the remaining projects?
 
 >> Any other comments?
+
+//Design doc being due a week earlier is not very beneficial. Rather, it is
+// distracting because we have constant fear of the design doc deadline coming
+// up. We spent a lot of time on this design doc more than the actual 
+// project. 

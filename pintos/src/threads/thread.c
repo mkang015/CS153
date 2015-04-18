@@ -370,11 +370,10 @@ int
 thread_get_priorityRecursive(struct thread* this)
 {
   int priority = this->priority;
-  int newPriority = this->newPriority;
   struct list donateList = this->donateList;
 
-  //get higher priority
-  int p = priority > newPriority ? priority : newPriority;
+  //get current priority
+  int p = priority;
   if(list_size(&donateList) == 0) //base case
     return p;
   else
@@ -508,6 +507,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+  list_init(&t->donateList); //min add, initialize donate list in each thread
+  							// when a created thread is initialize
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -523,20 +524,18 @@ alloc_frame (struct thread *t, size_t size)
   return t->stack;
 }
 
-/* Chooses and returns the next thread to be scheduled.  Should
-   return a thread from the run queue, unless the run queue is
-   empty.  (If the running thread can continue running, then it
-   will be in the run queue.)  If the run queue is empty, return
-   idle_thread. */
+//min add, chooses and returns the next thread to be scheduled.
+// Instead of blindingly picking the next element in ready list,
+// we fetch the thread that has highest priority.
 static struct thread *
 next_thread_to_run (void) 
 {
   if (list_empty (&ready_list))
     return idle_thread;
   else
-	  //get max priority element of donateList
-      return list_entry(list_max(&ready_list, listMaxComparator, NULL), 
-	  					struct thread, elem);
+	//get max priority element of donateList
+    return list_entry(list_max(&ready_list, listMaxComparator, NULL), 
+	  			      struct thread, elem);
 }
 
 /* Completes a thread switch by activating the new thread's page
@@ -606,7 +605,8 @@ static void
 schedule (void) 
 {
   struct thread *cur = running_thread ();
-  struct thread *next = next_thread_to_run ();
+  struct thread *next = next_thread_to_run (); //next thread will now be 
+  											   // thread with highest priority
   struct thread *prev = NULL;
 
   ASSERT (intr_get_level () == INTR_OFF);
