@@ -298,7 +298,7 @@ wakeUpThread()
       struct thread* t = list_entry(e, struct thread, waitelem); //get thread
       if(currentTicks >= t->wakeUpTime) //if it's time to wake up (>= covers 0 and neg case)
 	  {
-	    list_remove(&t->waitelem); //remove it from waitlist
+		list_remove(&t->waitelem); //remove it from waitlist
 	    thread_unblock(t); //unblock
 	  }
 	  else //if you reach thread that is not ready to wake up, you can just stop

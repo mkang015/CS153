@@ -350,8 +350,13 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
-  thread_yield();
+  struct thread* t = thread_current(); //get current thread
+  int old_priority = t->priority; //save old priority
+  t->priority = new_priority; //assign new priority
+
+  if(old_priority < new_priority)
+    thread_yield();
+  thread_current()->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */
@@ -362,6 +367,7 @@ int
 thread_get_priority (void) 
 {
   return thread_current()->thread_get_priorityRecursive(thread_current());
+  //return thread_current()->priority;
 }
 
 //min add
@@ -533,9 +539,19 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
-	//get max priority element of donateList
+  {
+	//get max priority element of ready_list
+	struct list_elem* max = list_max(&ready_list, listMaxComparator, NULL); //get elem
+    struct thread* maxPriorityThread = list_entry(max, struct thread, elem); //get thread
+
+	list_remove(max);
+	return maxPriorityThread;
+	/*
     return list_entry(list_max(&ready_list, listMaxComparator, NULL), 
 	  			      struct thread, elem);
+	*/
+	//return list_entry(list_pop_front(&ready_list), struct thread, elem);
+  }
 }
 
 /* Completes a thread switch by activating the new thread's page
@@ -590,7 +606,7 @@ listMaxComparator(const struct list_elem* a,
 				  const struct list_elem* b,
 				  void* aux UNUSED)
 {
-  return list_entry(a, struct thread, elem)->priority >
+  return list_entry(a, struct thread, elem)->priority <
   		 list_entry(b, struct thread, elem)->priority;
 }
 
