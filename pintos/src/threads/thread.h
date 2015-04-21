@@ -99,6 +99,8 @@ struct thread
     //min add, recursive priority getter (recursively go through all sub donateList)
 	int (*thread_get_priorityRecursive)(struct thread*);
     
+	//Raymond add, clean the donateList of the thread
+	void (*donateList_clean)(struct thread*); 
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
