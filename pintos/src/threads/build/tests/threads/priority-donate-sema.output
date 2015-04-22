@@ -1,19 +1,14 @@
-qemu -hda /tmp/Rb2QnEgA7G.dsk -m 4 -net none -nographic -monitor null
+qemu -hda /tmp/EmkJA2dksU.dsk -m 4 -net none -nographic -monitor null
 PiLo hda1
-Loading........
+Loading.........
 Kernel command line: -q run priority-donate-sema
-Pintos booting with 4,096 kB RAM...
-383 pages available in kernel pool.
-383 pages available in user pool.
-Calibrating timer...  104,755,200 loops/s.
-Boot complete.
-Executing 'priority-donate-sema':
-(priority-donate-sema) begin
-(priority-donate-sema) Main thread finished.
-(priority-donate-sema) end
-Execution of 'priority-donate-sema' complete.
-Timer: 21 ticks
-Thread: 0 idle ticks, 21 kernel ticks, 0 user ticks
-Console: 462 characters output
+Kernel PANIC at ../../threads/synch.c:178 in lock_init(): assertion `lock != NULL' failed.
+Call stack: 0xc0028599 0xc00226db 0xc0021003 0xc002119c 0xc002042a.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Timer: 0 ticks
+Thread: 0 idle ticks, 0 kernel ticks, 0 user ticks
+Console: 428 characters output
 Keyboard: 0 keys pressed
 Powering off...

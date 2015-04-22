@@ -1,14 +1,9 @@
 FAIL
-Some tick counts were missing or differed from those expected by more than 25.
-thread   actual <-> expected explanation
------- -------- --- -------- ----------------------------------------
-     0      300 <<< 672      Too small, by 347.
-     1      301 <<< 588      Too small, by 262.
-     2      301 <<< 492      Too small, by 166.
-     3      300 <<< 408      Too small, by 83.
-     4      300  =  316      
-     5      300 >>> 232      Too big, by 43.
-     6      300 >>> 152      Too big, by 123.
-     7      300 >>> 92       Too big, by 183.
-     8      301 >>> 40       Too big, by 236.
-     9      300 >>> 8        Too big, by 267.
+Kernel panic in run: PANIC at ../../threads/synch.c:178 in lock_init(): assertion `lock != NULL' failed.
+Call stack: 0xc0028599 0xc00226db 0xc0021003 0xc002119c 0xc002042a
+Translation of call stack:
+0xc0028599: debug_panic (.../../lib/kernel/debug.c:38)
+0xc00226db: lock_init (...../../threads/synch.c:180)
+0xc0021003: init_thread (..../../threads/thread.c:521)
+0xc002119c: thread_init (..../../threads/thread.c:103)
+0xc002042a: main (...d/../../threads/init.c:91)

@@ -196,6 +196,20 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  struct thread* holder = lock->holder; //min add, fetch current holder of 
+  										// of this lock
+  struct thread* cur = thread_current(); //min add, fetch current thread
+
+  //min add, check if this lock is acquired
+  //if acquired, need to add this current thread to donate list
+  // of the lock holder.
+  if(holder != NULL)
+  {
+    //min add, push_back to holder's donatelist
+	list_push_back(&holder->donateList, &cur->donateelem);
+	cur->theLock = lock; //assign the lock
+  }
+
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -230,6 +244,18 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
+
+  struct thread* holder = lock->holder; //min add, fetch holder of this lock
+  struct thread* cur = thread_current(); //min add, fetch current thread
+
+  //iterate through donate list of holder
+  struct list_elem* e = list_begin(&holder->donateList);
+  for(; e != list_end(&holder->donateList); e = list_next(e))
+  {
+    struct thread* t = list_entry(e, struct thread, donateelem);
+    if(t->theLock == lock) //remove the donor 
+	  list_remove(t);
+  }
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);

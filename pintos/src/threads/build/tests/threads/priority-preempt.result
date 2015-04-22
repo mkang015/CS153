@@ -1,23 +1,9 @@
 FAIL
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (priority-preempt) begin
-  (priority-preempt) Thread high-priority iteration 0
-  (priority-preempt) Thread high-priority iteration 1
-  (priority-preempt) Thread high-priority iteration 2
-  (priority-preempt) Thread high-priority iteration 3
-  (priority-preempt) Thread high-priority iteration 4
-  (priority-preempt) Thread high-priority done!
-  (priority-preempt) The high-priority thread should have already completed.
-  (priority-preempt) end
-Differences in `diff -u' format:
-  (priority-preempt) begin
-- (priority-preempt) Thread high-priority iteration 0
-- (priority-preempt) Thread high-priority iteration 1
-- (priority-preempt) Thread high-priority iteration 2
-- (priority-preempt) Thread high-priority iteration 3
-- (priority-preempt) Thread high-priority iteration 4
-- (priority-preempt) Thread high-priority done!
-  (priority-preempt) The high-priority thread should have already completed.
-  (priority-preempt) end
+Kernel panic in run: PANIC at ../../threads/synch.c:178 in lock_init(): assertion `lock != NULL' failed.
+Call stack: 0xc0028599 0xc00226db 0xc0021003 0xc002119c 0xc002042a
+Translation of call stack:
+0xc0028599: debug_panic (.../../lib/kernel/debug.c:38)
+0xc00226db: lock_init (...../../threads/synch.c:180)
+0xc0021003: init_thread (..../../threads/thread.c:521)
+0xc002119c: thread_init (..../../threads/thread.c:103)
+0xc002042a: main (...d/../../threads/init.c:91)

@@ -1,23 +1,9 @@
 FAIL
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (priority-donate-sema) begin
-  (priority-donate-sema) Thread L acquired lock.
-  (priority-donate-sema) Thread L downed semaphore.
-  (priority-donate-sema) Thread H acquired lock.
-  (priority-donate-sema) Thread H finished.
-  (priority-donate-sema) Thread M finished.
-  (priority-donate-sema) Thread L finished.
-  (priority-donate-sema) Main thread finished.
-  (priority-donate-sema) end
-Differences in `diff -u' format:
-  (priority-donate-sema) begin
-- (priority-donate-sema) Thread L acquired lock.
-- (priority-donate-sema) Thread L downed semaphore.
-- (priority-donate-sema) Thread H acquired lock.
-- (priority-donate-sema) Thread H finished.
-- (priority-donate-sema) Thread M finished.
-- (priority-donate-sema) Thread L finished.
-  (priority-donate-sema) Main thread finished.
-  (priority-donate-sema) end
+Kernel panic in run: PANIC at ../../threads/synch.c:178 in lock_init(): assertion `lock != NULL' failed.
+Call stack: 0xc0028599 0xc00226db 0xc0021003 0xc002119c 0xc002042a
+Translation of call stack:
+0xc0028599: debug_panic (.../../lib/kernel/debug.c:38)
+0xc00226db: lock_init (...../../threads/synch.c:180)
+0xc0021003: init_thread (..../../threads/thread.c:521)
+0xc002119c: thread_init (..../../threads/thread.c:103)
+0xc002042a: main (...d/../../threads/init.c:91)

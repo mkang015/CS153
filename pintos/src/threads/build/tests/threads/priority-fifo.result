@@ -1,2 +1,9 @@
 FAIL
-No iterations found in output.
+Kernel panic in run: PANIC at ../../threads/synch.c:178 in lock_init(): assertion `lock != NULL' failed.
+Call stack: 0xc0028599 0xc00226db 0xc0021003 0xc002119c 0xc002042a
+Translation of call stack:
+0xc0028599: debug_panic (.../../lib/kernel/debug.c:38)
+0xc00226db: lock_init (...../../threads/synch.c:180)
+0xc0021003: init_thread (..../../threads/thread.c:521)
+0xc002119c: thread_init (..../../threads/thread.c:103)
+0xc002042a: main (...d/../../threads/init.c:91)

@@ -350,13 +350,15 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  struct thread* t = thread_current(); //get current thread
-  int old_priority = t->priority; //save old priority
-  t->priority = new_priority; //assign new priority
+  struct thread* cur = thread_current(); //get current thread
 
-  if(old_priority < new_priority)
+  struct list_elem* max = list_max(&ready_list, listMaxComparator, NULL); //get elem
+  struct thread* maxPriorityThread = list_entry(max, struct thread, elem); //get thread
+
+  if(new_priority < maxPriorityThread->priority)
     thread_yield();
-  thread_current()->priority = new_priority;
+
+  cur->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */
@@ -514,7 +516,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
   list_init(&t->donateList); //min add, initialize donate list in each thread
-  							// when a created thread is initialize
+  							 // when a created thread is initialize
+  lock_init(t->theLock); //min add, initialize the lock
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -606,8 +609,10 @@ listMaxComparator(const struct list_elem* a,
 				  const struct list_elem* b,
 				  void* aux UNUSED)
 {
-  return list_entry(a, struct thread, elem)->priority <
-  		 list_entry(b, struct thread, elem)->priority;
+  struct thread* amax = list_entry(a, struct thread, elem); //get the max thread of a
+  struct thread* bmax = list_entry(b, struct thread, elem); //get the max thread of b
+  return amax->thread_get_priorityRecursive(amax) <
+  		 bmax->thread_get_priorityRecursive(bmax);
 }
 
 /* Schedules a new process.  At entry, interrupts must be off and

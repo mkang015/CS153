@@ -1,19 +1,9 @@
 FAIL
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (priority-change) begin
-  (priority-change) Creating a high-priority thread 2.
-  (priority-change) Thread 2 now lowering priority.
-  (priority-change) Thread 2 should have just lowered its priority.
-  (priority-change) Thread 2 exiting.
-  (priority-change) Thread 2 should have just exited.
-  (priority-change) end
-Differences in `diff -u' format:
-  (priority-change) begin
-  (priority-change) Creating a high-priority thread 2.
-- (priority-change) Thread 2 now lowering priority.
-  (priority-change) Thread 2 should have just lowered its priority.
-- (priority-change) Thread 2 exiting.
-  (priority-change) Thread 2 should have just exited.
-  (priority-change) end
+Kernel panic in run: PANIC at ../../threads/synch.c:178 in lock_init(): assertion `lock != NULL' failed.
+Call stack: 0xc0028599 0xc00226db 0xc0021003 0xc002119c 0xc002042a
+Translation of call stack:
+0xc0028599: debug_panic (.../../lib/kernel/debug.c:38)
+0xc00226db: lock_init (...../../threads/synch.c:180)
+0xc0021003: init_thread (..../../threads/thread.c:521)
+0xc002119c: thread_init (..../../threads/thread.c:103)
+0xc002042a: main (...d/../../threads/init.c:91)
