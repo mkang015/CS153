@@ -70,9 +70,15 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
-static bool listMaxComparator(const struct list_elem* a,
-							  const struct list_elem* b,
-							  void* aux UNUSED); //min add 
+/*
+static bool listMaxComparatorDonate(const struct list_elem* a,
+							        const struct list_elem* b,
+							        void* aux UNUSED); //min add 
+
+static bool listMaxComparatorReady(const struct list_elem* a,
+							       const struct list_elem* b,
+							       void* aux UNUSED); //min add 
+*/
 int thread_get_priorityRecursive(struct thread* this); //min add
 
 /* Initializes the threading system by transforming the code
@@ -213,6 +219,9 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
+  if(thread_current()->thread_get_priorityRecursive(thread_current()) < t->priority)
+    thread_yield();
+
   return tid;
 }
 
@@ -350,15 +359,15 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  //Raymond *delete after debug*
+  //set_prority works with out get and next_thread
   struct thread* cur = thread_current(); //get current thread
-
-  struct list_elem* max = list_max(&ready_list, listMaxComparator, NULL); //get elem
-  struct thread* maxPriorityThread = list_entry(max, struct thread, elem); //get thread
-
-  if(new_priority < maxPriorityThread->priority)
-    thread_yield();
+  struct list_elem* max = list_max(&cur->donateList, listMaxComparatorDonate, NULL); //get elem
+  struct thread* maxPriorityThread = list_entry(max, struct thread, donateelem); //get thread
 
   cur->priority = new_priority;
+  if(maxPriorityThread->priority < new_priority)
+    thread_yield();
 }
 
 /* Returns the current thread's priority. */
@@ -377,17 +386,15 @@ thread_get_priority (void)
 int
 thread_get_priorityRecursive(struct thread* this)
 {
-  int priority = this->priority;
-  struct list donateList = this->donateList;
-
   //get current priority
-  int p = priority;
-  if(list_size(&donateList) == 0) //base case
+  int p = this->priority;
+
+  if(list_empty(&this->donateList)) //base case
     return p;
   else
   {
-    struct list_elem* e = list_begin(&donateList);
-    for(; e != list_end(&donateList); e = list_next(e))
+    struct list_elem* e = list_begin(&this->donateList);
+    for(; e != list_end(&this->donateList); e = list_next(e))
 	{
 	  struct thread* t = list_entry(e, struct thread, donateelem);
 	  int donorP = t->thread_get_priorityRecursive(t); //recursive donor's max priority
@@ -517,7 +524,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
   list_init(&t->donateList); //min add, initialize donate list in each thread
   							 // when a created thread is initialize
-  lock_init(t->theLock); //min add, initialize the lock
+  t->thread_get_priorityRecursive = thread_get_priorityRecursive; //init the member function address
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -544,17 +551,21 @@ next_thread_to_run (void)
   else
   {
 	//get max priority element of ready_list
-	struct list_elem* max = list_max(&ready_list, listMaxComparator, NULL); //get elem
+	struct list_elem* max = list_max(&ready_list, listMaxComparatorReady, NULL); //get elem
     struct thread* maxPriorityThread = list_entry(max, struct thread, elem); //get thread
 
 	list_remove(max);
+	
 	return maxPriorityThread;
-	/*
-    return list_entry(list_max(&ready_list, listMaxComparator, NULL), 
-	  			      struct thread, elem);
-	*/
 	//return list_entry(list_pop_front(&ready_list), struct thread, elem);
   }
+
+
+  /*if(list_empty(&ready_list))
+    return idle_thread;
+  else
+	return list_entry(list_pop_front(&ready_list), struct thread, elem);*/
+
 }
 
 /* Completes a thread switch by activating the new thread's page
@@ -603,17 +614,32 @@ thread_schedule_tail (struct thread *prev)
     }
 }
 
-//comparator for list_max
-static bool
-listMaxComparator(const struct list_elem* a,
-				  const struct list_elem* b,
-				  void* aux UNUSED)
+//comparator for list_max for donateList
+bool
+listMaxComparatorDonate(const struct list_elem* a,
+				        const struct list_elem* b,
+				        void* aux UNUSED)
 {
-  struct thread* amax = list_entry(a, struct thread, elem); //get the max thread of a
-  struct thread* bmax = list_entry(b, struct thread, elem); //get the max thread of b
+  struct thread* amax = list_entry(a, struct thread, donateelem); //get the max thread of a
+  struct thread* bmax = list_entry(b, struct thread, donateelem); //get the max thread of b
+
   return amax->thread_get_priorityRecursive(amax) <
   		 bmax->thread_get_priorityRecursive(bmax);
 }
+
+//comparator for list_max for ready_list
+bool
+listMaxComparatorReady(const struct list_elem* a,
+					   const struct list_elem* b,
+					   void* aux UNUSED)
+{
+  struct thread* amax = list_entry(a, struct thread, elem); //get the max thread of a
+  struct thread* bmax = list_entry(b, struct thread, elem); //get the max thread of b
+
+  return amax->thread_get_priorityRecursive(amax) <
+  		 bmax->thread_get_priorityRecursive(bmax);
+}
+
 
 /* Schedules a new process.  At entry, interrupts must be off and
    the running process's state must have been changed from
