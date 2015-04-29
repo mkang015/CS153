@@ -32,15 +32,6 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 
-//Ray Add
-/*static bool semaComparator( const struct list elem* a,
-							const struct list_elem* b,
-							void* aux UNUSED)
-{
-	return list_entry(a, struct semaphore_elem, elem)->semaphore.elem < 
-		   list_entry(b, struct thread, waitelem)->semaphore;	
-}*/
-
 /* Initializes semaphore SEMA to VALUE.  A semaphore is a
    nonnegative integer along with two atomic operators for
    manipulating it:
@@ -112,7 +103,6 @@ sema_try_down (struct semaphore *sema)
 
 /* Up or "V" operation on a semaphore.  Increments SEMA's value
    and wakes up one thread of those waiting for SEMA, if any.
-/sema_up
 
    This function may be called from an interrupt handler. */
 void
@@ -124,18 +114,10 @@ sema_up (struct semaphore *sema)
 
   old_level = intr_disable ();
   if (!list_empty (&sema->waiters)) 
-    //thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                //struct thread, elem));
-  {
-	struct list_elem* max = list_max(&sema->waiters, listMaxComparatorReady, NULL); //get elem
-	struct thread* maxPriorityThread = list_entry(max, struct thread, elem); //get thread
-
-	list_remove(max);
-	thread_unblock(maxPriorityThread);
-  }
+    thread_unblock (list_entry (list_pop_front (&sema->waiters),
+                                struct thread, elem));
   sema->value++;
   intr_set_level (old_level);
-  thread_yield(); //need to yield
 }
 
 static void sema_test_helper (void *sema_);
@@ -214,22 +196,6 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
-
-
-  struct thread* holder = lock->holder; //min add, fetch current holder of 
-  										// of this lock
-  struct thread* cur = thread_current(); //min add, fetch current thread
-
-  //min add, check if this lock is acquired
-  //if acquired, need to add this current thread to donate list
-  // of the lock holder.
-  if(holder != NULL)
-  {
-    //min add, push_back to holder's donatelist
-	list_push_back(&holder->donateList, &cur->donateelem);
-	cur->theLock = lock; //assign the lock
-  }
-
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -264,22 +230,6 @@ lock_release (struct lock *lock)
 {
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
-
-  struct thread* holder = lock->holder; //min add, fetch holder of this lock
-
-  //iterate through donate list of holder
-  struct list_elem* e = list_begin(&holder->donateList);
-  for(; e != list_end(&holder->donateList); e = list_next(e))
-  {
-    struct thread* t = list_entry(e, struct thread, donateelem);
-    if(t->theLock == lock) //remove the donor 
-	{
-	  struct list_elem* tmpNext = list_next(e); //save next
-	  struct list_elem* tmpPrev = list_prev(e); //save prev
-	  list_remove(e);
-	  tmpPrev->next = tmpNext; //connect the list
-	}
-  }
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
@@ -345,13 +295,6 @@ cond_wait (struct condition *cond, struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
   
   sema_init (&waiter.semaphore, 0);
-  //Ray Add
-
-  /*struct list* theList = &cond->waiters;
-  struct list_elem* theElem = &waiter.elem;
-
-  list_insert_ordered(&cond->waiters, &waiter.elem, semaComparator, NULL);
-*/
   list_push_back (&cond->waiters, &waiter.elem);
   lock_release (lock);
   sema_down (&waiter.semaphore);
@@ -374,15 +317,8 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (lock_held_by_current_thread (lock));
 
   if (!list_empty (&cond->waiters)) 
-  {
-    sema_up (&list_entry (list_pop_front (&cond->waiters),struct semaphore_elem, elem)->semaphore);
-
-/*
-	struct list_elem* max = 
-	struct semaphore* sema = list_entry(max, 
-	sema_up(sema);
-	*/
-  }
+    sema_up (&list_entry (list_pop_front (&cond->waiters),
+                          struct semaphore_elem, elem)->semaphore);
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by
@@ -400,4 +336,3 @@ cond_broadcast (struct condition *cond, struct lock *lock)
   while (!list_empty (&cond->waiters))
     cond_signal (cond, lock);
 }
-
