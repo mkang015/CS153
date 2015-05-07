@@ -42,6 +42,7 @@ process_execute (const char *file_name)
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
+
   return tid;
 }
 
@@ -66,6 +67,25 @@ start_process (void *file_name_)
   if (!success) 
     thread_exit ();
 
+  struct thread* t = thread_current();
+  t->thread_type = true; //min add, set the thread_type (true == user thread)
+/*
+  for(int i = 0; i < 16; ++i)
+  {
+  	if(t->name[i] == ' ') //just fetch the command
+	  break;
+    t->name[i] = file_name[i];
+  }
+*/
+
+  char** savePtr;
+  const char* delim = " ";
+  char* command = strtok_r(file_name, delim, savePtr);
+
+  int i = 0;
+  for(; command[i] != '\0'; ++i)
+    t->name[i] = command[i];
+
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -88,6 +108,7 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  while(1); //min add, temporarily added 
   return -1;
 }
 
@@ -97,6 +118,9 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+
+  if(cur->thread_type) //min add, come back and add check for halt system call
+    printf("%s: exit(%d)\n", cur->name, cur->tid);
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -437,7 +461,8 @@ setup_stack (void **esp)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success)
-        *esp = PHYS_BASE;
+        //*esp = PHYS_BASE;
+		*esp = PHYS_BASE - 12; //min add, temporarily added
       else
         palloc_free_page (kpage);
     }

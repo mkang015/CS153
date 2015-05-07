@@ -1,0 +1,4 @@
+in process.c
+
+	1. remove that while(1); in process_wait().
+	2. need to remove the line *esp = PHYS_BASE - 12; and uncomment previous line

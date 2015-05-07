@@ -85,10 +85,12 @@ struct thread
     /* Owned by thread.c. */
     tid_t tid;                          /* Thread identifier. */
     enum thread_status status;          /* Thread state. */
-    char name[16];                      /* Name (for debugging purposes). */
+    char name[16];                      //min change, filename
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
+
+	bool thread_type;					//min add, user thread(1), kernel thread(0)
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
