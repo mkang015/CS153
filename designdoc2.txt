@@ -1,0 +1,227 @@
+			 +--------------------------+
+			 |			CS 153		    |
+		     | PROJECT 2: USER PROGRAMS	|
+		     | 	   DESIGN DOCUMENT     	|
+		     +--------------------------+
+
+---- GROUP ----
+
+>> Fill in the names and email addresses of your group members.
+
+Min Kang  <mkang015@ucr.edu>
+Raymond Ho <rho002@ucr.edu>
+
+---- PRELIMINARIES ----
+
+>> If you have any preliminary comments on your submission, notes for the
+>> TAs, or extra credit, please give them here.
+
+>> Please cite any offline or online sources you consulted while
+>> preparing your submission, other than the Pintos documentation, course
+>> text, lecture notes, and course staff.
+
+			   ARGUMENT PASSING
+			   ================
+
+---- DATA STRUCTURES ----
+
+>> A1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+//FIXME
+
+---- ALGORITHMS ----
+
+>> A2: Briefly describe how you implemented argument parsing.  How do
+>> you arrange for the elements of argv[] to be in the right order?
+>> How do you avoid overflowing the stack page?
+
+Implemented argument parsing left to right parsing by " " then we push the words onto the
+stack backwards. Then push a null pointer sentinel, the address of each word
+in right-to-left order, argv, argc, and 0 as a fake return address.
+We arranged the elements right to left of argv[] to make sure it is in the
+right order. Since we know argc and the size of the address, we can stop
+argument parsing when it is too large. Basically know size so stop when larger 
+than the stack page.
+
+---- RATIONALE ----
+
+>> A3: Why does Pintos implement strtok_r() but not strtok()?
+
+strtok() has problems when running with multiple threads. It stores its
+location using a static pointer which leads to race conditions.
+strtok()_r on the other hand takes in a third argument which determines the
+place within the string to search for tokens. Storage space for states is
+given by caller which leads to no race conditions.
+
+>> A4: In Pintos, the kernel separates commands into a executable name
+>> and arguments.  In Unix-like systems, the shell does this
+>> separation.  Identify at least two advantages of the Unix approach.
+
+One advantage is that for unix-like systems, we could handle the parsing
+easier so checking for invalid arguments could be checked before actually
+running and storing the command line.
+
+Another advantage is that we could make more rules for Unix-like systems with
+less overhead. If we made more rules like pipeline redirection with the kernel
+then there would be more to process and it'll be very complex. This being awful
+since the kernel is being mostly ran by the CPU.
+
+			     SYSTEM CALLS
+			     ============
+
+---- DATA STRUCTURES ----
+
+>> B1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+
+//FIXME
+
+>> B2: Describe how file descriptors are associated with open files.
+>> Are file descriptors unique within the entire OS or just within a
+>> single process?
+
+Each process maintains a list of open files. Each index in the array is a file
+descriptor for a open file. When a file is opened, we store the pointer of it
+ and return the index as a file descriptor.
+When the file closes, we traverse the array andfind the matching open file 
+for the file descriptor then remove it from the list.
+
+A process has its own file descripter for each open file inside a list.
+
+---- ALGORITHMS ----
+
+>> B3: Describe your code for reading and writing user data from the
+>> kernel.
+
+First we check if the address is valid. We then check if the content the
+address points to is valid(under PHYS_BASE. Then we can use the address to access the real
+data. If anything false then we have a page_fault handler.
+
+>> B4: Suppose a system call causes a full page (4,096 bytes) of data
+>> to be copied from user space into the kernel.  What is the least
+>> and the greatest possible number of inspections of the page table
+>> (e.g. calls to pagedir_get_page()) that might result?  What about
+>> for a system call that only copies 2 bytes of data?  Is there room
+>> for improvement in these numbers, and how much?
+
+//FIXME
+
+There is high chance that the greatest possible number of inspections of the
+page table being 2. With a chance being 0, if all the data on the page table
+is valid. The greatest possible number of inspections if a system call that
+only copies 2 bytes of data is still 2. With the chance of being 0, with the
+same reason being of copying the full page. 
+There is room for improvement if
+we know which data are being used at the same time. We could put it on the
+same page and lower the amount of times we have to access another page.
+
+>> B5: Briefly describe your implementation of the "wait" system call
+>> and how it interacts with process termination.
+
+When wait is called, it searches the parent's children list. If found it will
+wait under the child semaphore. When the Child is finished, it will exit then wake
+up the parent by the semaphore
+
+>> B6: Any access to user program memory at a user-specified address
+>> can fail due to a bad pointer value.  Such accesses must cause the
+>> process to be terminated.  System calls are fraught with such
+>> accesses, e.g. a "write" system call requires reading the system
+>> call number from the user stack, then each of the call's three
+>> arguments, then an arbitrary amount of user memory, and any of
+>> these can fail at any point.  This poses a design and
+>> error-handling problem: how do you best avoid obscuring the primary
+>> function of code in a morass of error-handling?  Furthermore, when
+>> an error is detected, how do you ensure that all temporarily
+>> allocated resources (locks, buffers, etc.) are freed?  In a few
+>> paragraphs, describe the strategy or strategies you adopted for
+>> managing these issues.  Give an example.
+
+To avoid obscuring the primary function of code ina a morass of
+error-handling, the code checks the pointer to see check the string content
+before reading and writing. Another way we could do this is by using a fault
+handler and exit the thread.
+
+To ensure all temporarily allocated resources are freed, it is the user's own
+responsibility to take care of releasing any allocated resource.
+
+If there is a user call, the system call handler is called to check whether
+the stack pointer is valid. If not valid, the process is terminated. If valid
+we finish the call.
+
+---- SYNCHRONIZATION ----
+
+>> B7: The "exec" system call returns -1 if loading the new executable
+>> fails, so it cannot return before the new executable has completed
+>> loading.  How does your code ensure this?  How is the load
+>> success/failure status passed back to the thread that calls "exec"?
+
+The child thread has a return value that stores the return status. When it is
+done, the parent can get the return value/status.
+
+>> B8: Consider parent process P with child process C.  How do you
+>> ensure proper synchronization and avoid race conditions when P
+>> calls wait(C) before C exits?  After C exits?  How do you ensure
+>> that all resources are freed in each case?  How about when P
+>> terminates without waiting, before C exits?  After C exits?  Are
+>> there any special cases?
+
+So we deal with all of this by doing a recursive check and using semaphores.
+Semaphores help avoid race conditions.
+There will be a sema down in the P thread waiting for C to call sema up. This
+allows C to finish and exit before P exits. P will wait until all its children
+exits and if any of those children have children then P must wait until that
+child's children exit then the child exits then P exits. All resources are
+freed when P is finished since everything is stored in P's thread struct.
+
+---- RATIONALE ----
+
+>> B9: Why did you choose to implement access to user memory from the
+>> kernel in the way that you did?
+
+By verifying the pointer given before we dereference it, it allows us to
+have less code to deal with exceptions. If it was an invalid pointer then it
+would lead us to a page fault where we manage it with an exception.
+
+>> B10: What advantages or disadvantages can you see to your design
+>> for file descriptors?
+
+The advantages of our design for file descriptors is that it is easy to
+manage and was easy to implement.
+The disadvantage is that there isn't much we can do if we wanted to have a
+different number of files in a process. So because space is fixed, if we
+wanted to change something up in the future then that's not going to happen.
+
+>> B11: The default tid_t to pid_t mapping is the identity mapping.
+>> If you changed it, what advantages are there to your approach?
+
+The advantages to our approach is that there is a common ground where data is
+accessable between threads. We made it so the pid_t can map to several tid_t.
+
+
+			   SURVEY QUESTIONS
+			   ================
+
+Answering these questions is optional, but it will help us improve the
+course in future quarters.  Feel free to tell us anything you
+want--these questions are just to spur your thoughts.  You may also
+choose to respond anonymously in the course evaluations at the end of
+the quarter.
+
+>> In your opinion, was this assignment, or any one of the three problems
+>> in it, too easy or too hard?  Did it take too long or too little time?
+
+>> Did you find that working on a particular part of the assignment gave
+>> you greater insight into some aspect of OS design?
+
+>> Is there some particular fact or hint we should give students in
+>> future quarters to help them solve the problems?  Conversely, did you
+>> find any of our guidance to be misleading?
+
+>> Do you have any suggestions for the TAs to more effectively assist
+>> students, either for future quarters or the remaining projects?
+
+>> Any other comments?
+
