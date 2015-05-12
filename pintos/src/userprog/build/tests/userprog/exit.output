@@ -1,0 +1,40 @@
+Copying tests/userprog/exit to scratch partition...
+qemu -hda /tmp/rr_71bIv_q.dsk -m 4 -net none -nographic -monitor null
+PiLo hda1
+Loading.........
+Kernel command line: -q -f extract run exit
+Pintos booting with 4,096 kB RAM...
+383 pages available in kernel pool.
+383 pages available in user pool.
+Calibrating timer...  104,755,200 loops/s.
+hda: 5,040 sectors (2 MB), model "QM00001", serial "QEMU HARDDISK"
+hda1: 147 sectors (73 kB), Pintos OS kernel (20)
+hda2: 4,096 sectors (2 MB), Pintos file system (21)
+hda3: 91 sectors (45 kB), Pintos scratch (22)
+filesys: using hda2
+scratch: using hda3
+Formatting file system...done.
+Boot complete.
+Extracting ustar archive from scratch device into file system...
+Putting 'exit' into the file system...
+Erasing ustar archive...
+Executing 'exit':
+Page fault at 0x12: not present error writing page in kernel context.
+Interrupt 0x0e (#PF Page-Fault Exception) at eip=0xc0027a55
+ cr2=00000012 error=00000002
+ eax=00000012 ebx=00000003 ecx=00000065 edx=00000000
+ esi=c0007d50 edi=c0007d55 esp=c0033b30 ebp=c000eed8
+ cs=0008 ds=0010 es=0010 ss=6000
+Kernel PANIC at ../../userprog/exception.c:100 in kill(): Kernel bug - unexpected interrupt in kernel
+Call stack: 0xc00284f9 0xc002b778 0xc002b82a 0xc0021a04 0xc0021b3b 0xc0027a55 0xc0027bea 0xc002a485 0xc0020980 0xc0020920.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Timer: 96 ticks
+Thread: 0 idle ticks, 96 kernel ticks, 0 user ticks
+hda2 (filesys): 26 reads, 186 writes
+hda3 (scratch): 90 reads, 2 writes
+Console: 1457 characters output
+Keyboard: 0 keys pressed
+Exception: 1 page faults
+Powering off...
