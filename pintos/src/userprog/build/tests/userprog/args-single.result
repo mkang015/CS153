@@ -1,14 +1,2 @@
 FAIL
-Kernel panic in run: PANIC at ../../userprog/exception.c:100 in kill(): Kernel bug - unexpected interrupt in kernel
-Call stack: 0xc00284f9 0xc002b778 0xc002b82a 0xc0021a04 0xc0021b3b 0xc0027a55 0xc0027bea 0xc002a485 0xc0020980 0xc0020920
-Translation of call stack:
-0xc00284f9: debug_panic (.../../lib/kernel/debug.c:38)
-0xc002b778: kill (.../userprog/exception.c:105)
-0xc002b82a: page_fault (.../userprog/exception.c:160)
-0xc0021a04: intr_handler (..../threads/interrupt.c:367)
-0xc0021b3b: intr_entry (threads/intr-stubs.S:38)
-0xc0027a55: memcpy (...ild/../../lib/string.c:16)
-0xc0027bea: strlcpy (...ld/../../lib/string.c:340)
-0xc002a485: process_execute (.../../userprog/process.c:61)
-0xc0020980: run_task (.../../../threads/init.c:288)
-0xc0020920: run_actions (.../../../threads/init.c:341)
+run: TIMEOUT after 60 seconds of host CPU time
